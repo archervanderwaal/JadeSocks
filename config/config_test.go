@@ -6,7 +6,7 @@ import (
 )
 
 func removeConfigFile() {
-	_ = os.Remove(configFile())
+	_ = os.Remove(configFile(false))
 }
 
 func TestLoadConfig(t *testing.T) {
