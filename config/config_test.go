@@ -13,7 +13,7 @@ func TestLoadConfig(t *testing.T) {
 	removeConfigFile()
 	config := LoadConfig(false)
 
-	if config.ListenAddr != "" || config.RemoteAddr != "" || config.Password != "" {
+	if config.ListenAddr != "localhost:1087" || config.RemoteAddr != "xxx.xxx.xxx.xxx:8989" {
 		t.Error()
 	}
 }

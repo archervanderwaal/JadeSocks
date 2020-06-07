@@ -13,14 +13,27 @@ import (
 )
 
 const (
-	configFileName                 = "JadeSocks.yaml"
+	clientConfigFileName           = "JadeSocks-client.yaml"
+	serverConfigFileName           = "JadeSocks-server.yaml"
+	defaultClientConfigFileContent = `
+listen: localhost:1087
+remote: xxx.xxx.xxx.xxx:8989
+users:
+  user1: passwd2
+`
+	defaultServerConfigFileContent = `
+listen: localhost:8989
+users:
+  user1: passwd1
+  user2: passwd2
+  user3: passwd3
+`
 )
 
 type Config struct {
-	ListenAddr 	string 				`yaml:"listen"`
-	RemoteAddr 	string 				`yaml:"remote"`
-	Password   	string 				`yaml:"password"`
-	Users 		map[string]string 	`yaml:"users"`
+	ListenAddr string            `yaml:"listen"`
+	RemoteAddr string            `yaml:"remote"`
+	Users      map[string]string `yaml:"users"`
 }
 
 func LoadConfig(serverMode bool) *Config {
@@ -35,27 +48,32 @@ func LoadConfig(serverMode bool) *Config {
 }
 
 func configFile(serverMode bool) string {
-	configFilePath := filepath.Join(utils.Home(), configFileName)
-	writeDefaultConfigContent(serverMode)
+	var configFilePath string
+	if serverMode {
+		configFilePath = filepath.Join(utils.Home(), serverConfigFileName)
+	} else {
+		configFilePath = filepath.Join(utils.Home(), clientConfigFileName)
+	}
+	writeDefaultConfigContent(serverMode, configFilePath)
 	return configFilePath
 }
 
-func writeDefaultConfigContent(serverMode bool) {
+func writeDefaultConfigContent(serverMode bool, configFilePath string) {
 	if !utils.Exists(utils.Home()) {
 		_ = os.Mkdir(utils.Home(), 0755)
 	}
-	if utils.Exists(filepath.Join(utils.Home(), configFileName)) {
+	if utils.Exists(configFilePath) {
 		return
 	}
-	file, err := os.Create(filepath.Join(utils.Home(), configFileName))
+	file, err := os.Create(configFilePath)
 	if err != nil {
 		log.Println(rgbterm.FgString("Internal error "+err.Error(), 255, 0, 0))
 		os.Exit(1)
 	}
 	defer file.Close()
 	if serverMode {
-		_, _ = fmt.Fprint(file, "")
+		_, _ = fmt.Fprint(file, defaultServerConfigFileContent)
 	} else {
-		_, _ = fmt.Fprint(file, "")
+		_, _ = fmt.Fprint(file, defaultClientConfigFileContent)
 	}
 }

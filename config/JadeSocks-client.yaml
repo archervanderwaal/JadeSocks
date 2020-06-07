@@ -1,4 +1,0 @@
-listen: localhost:8989
-remote: archervanderwaal.com:8989
-users:
-  user1: passwd2
