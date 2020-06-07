@@ -90,11 +90,11 @@ func (server *Server) process(req *Request, conn net.Conn) error {
 func (server *Server) handleConnect(req *Request, conn net.Conn) error {
 	dial := server.Config.Dial
 	if dial == nil {
-		dial = func(network, addr string) (net.Conn, error) {
-			return net.Dial(network, addr)
+		dial = func(network string, addr AddrSpec) (net.Conn, error) {
+			return net.DialTCP(network, nil, &net.TCPAddr{IP: addr.IP, Port:int(addr.Port)})
 		}
 	}
-	target, err := dial("tcp", req.DestAddr.Address())
+	target, err := dial("tcp", *req.DestAddr)
 	if err != nil {
 		msg := err.Error()
 		resp := hostUnreachable

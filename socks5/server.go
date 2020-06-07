@@ -15,7 +15,7 @@ type ServerConfig struct {
 	Network 	string
 	ListenAddr  string
 	Logger      *go_logger.Logger
-	Dial        func(network, addr string) (net.Conn, error)
+	Dial        func(network string, addr AddrSpec) (net.Conn, error)
 }
 
 type Server struct {
@@ -99,7 +99,7 @@ func (server *Server) handleConn(conn net.Conn) error {
 	// process client request
 	if err := server.process(request, conn); err != nil {
 		err = fmt.Errorf("Failed to handle request: %v ", err)
-		server.Config.Logger.Errorf("Failed to handle request: %v ", err)
+		server.Config.Logger.Errorf("%v ", err)
 		return err
 	}
 	return nil
