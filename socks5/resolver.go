@@ -8,7 +8,6 @@ type NameResolver interface {
 	Resolve(name string) (net.IP, error)
 }
 
-// DNSResolver uses the system DNS to resolve host names
 type DNSResolver struct{}
 
 func (d DNSResolver) Resolve(name string) (net.IP, error) {

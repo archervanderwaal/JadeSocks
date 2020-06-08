@@ -36,6 +36,13 @@ type Request struct {
 	reader     io.Reader
 }
 
+type AddrSpec struct {
+	Domain   string
+	AddrType byte
+	IP       net.IP
+	Port     uint16
+}
+
 func NewRequest(reader io.Reader) (*Request, error) {
 	header := []byte{0, 0, 0}
 	if _, err := io.ReadAtLeast(reader, header, 3); err != nil {
