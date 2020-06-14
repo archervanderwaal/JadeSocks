@@ -12,7 +12,7 @@ const format = "%millisecond_format% [%level_string%] [%function%:%line%] %body%
 var Logger *go_logger.Logger
 
 func init() {
-	logDir := path.Join(utils.Home(), "log")
+	logDir := path.Join(utils.Home(), "logger")
 	if !utils.Exists(logDir) {
 		_ = os.Mkdir(logDir, 0755)
 	}
@@ -25,11 +25,11 @@ func init() {
 	}
 	_ = Logger.Attach("console", go_logger.LOGGER_LEVEL_DEBUG, consoleConfig)
 	fileConfig := &go_logger.FileConfig {
-		Filename : path.Join(logDir, "all.log"),
+		Filename : path.Join(logDir, "all.logger"),
 		LevelFileName : map[int]string {
-			Logger.LoggerLevel("error"): path.Join(logDir, "error.log"),
-			Logger.LoggerLevel("info"):  path.Join(logDir, "info.log"),
-			Logger.LoggerLevel("debug"): path.Join(logDir, "debug.log"),
+			Logger.LoggerLevel("error"): path.Join(logDir, "error.logger"),
+			Logger.LoggerLevel("info"):  path.Join(logDir, "info.logger"),
+			Logger.LoggerLevel("debug"): path.Join(logDir, "debug.logger"),
 		},
 		MaxSize : 1024 * 1024,
 		MaxLine : 100000,

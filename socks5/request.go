@@ -8,23 +8,29 @@ import (
 )
 
 const (
-	ConnectCommand   = uint8(1)
-	BindCommand      = uint8(2)
-	AssociateCommand = uint8(3)
-	ipv4Address      = uint8(1)
-	fqdnAddress      = uint8(3)
-	ipv6Address      = uint8(4)
+	connectCommand   = uint8(1)
+	bindCommand      = uint8(2)
+	associateCommand = uint8(3)
 )
 
 const (
+	// 0x00 succeeded
 	succeeded uint8 = iota
+	// 0x01 general SOCKS server failure
 	serverFailure
-	ruleFailure
+	// 0x02 connection not allowed by ruleset
+	ruleNotAllowed
+	// 0x03 network unreachable
 	networkUnreachable
+	// 0x04 host unreachable
 	hostUnreachable
+	// 0x05 connection refused
 	connectionRefused
+	// 0x06 TTL expired
 	ttlExpired
+	// 0x07 command not supported
 	commandNotSupported
+	// 0x08 address type not supported
 	addrTypeNotSupported
 )
 
@@ -78,11 +84,11 @@ func (server *Server) process(req *Request, conn net.Conn) error {
 		dest.IP = addr
 	}
 	switch req.Command {
-	case ConnectCommand:
+	case connectCommand:
 		return server.handleConnect(req, conn)
-	case BindCommand:
+	case bindCommand:
 		return server.handleBind(req, conn)
-	case AssociateCommand:
+	case associateCommand:
 		return server.handleAssociate(req, conn)
 	default:
 		if err := sendResponse(conn, commandNotSupported, nil); err != nil {
@@ -95,6 +101,9 @@ func (server *Server) process(req *Request, conn net.Conn) error {
 }
 
 func (server *Server) handleConnect(req *Request, conn net.Conn) error {
+	if err := server.checkRules(req, conn); err != nil {
+		return err
+	}
 	dial := server.Config.Dial
 	if dial == nil {
 		dial = func(network string, addr AddrSpec) (net.Conn, error) {
@@ -144,6 +153,9 @@ func (server *Server) handleConnect(req *Request, conn net.Conn) error {
 }
 
 func (server *Server) handleBind(req *Request, conn net.Conn) error {
+	if err := server.checkRules(req, conn); err != nil {
+		return err
+	}
 	if err := sendResponse(conn, commandNotSupported, nil); err != nil {
 		server.Config.Logger.Errorf("Failed to send response: %v ", err)
 		return err
@@ -153,6 +165,45 @@ func (server *Server) handleBind(req *Request, conn net.Conn) error {
 }
 
 func (server *Server) handleAssociate(req *Request, conn net.Conn) error {
+	if err := server.checkRules(req, conn); err != nil {
+		return err
+	}
+	//// Check if this is allowed
+	//	_ctx, ok := s.config.Rules.Allow(ctx, req)
+	//	if !ok {
+	//		if err := sendReply(conn, ReplyRuleFailure, nil); err != nil {
+	//			return fmt.Errorf("failed to send reply: %v", err)
+	//		}
+	//		return fmt.Errorf("associate to %v blocked by rules", req.DestAddr)
+	//	}
+	//	ctx = _ctx
+	//
+	//	// check bindIP 1st
+	//	if len(s.config.BindIP) == 0 || s.config.BindIP.IsUnspecified() {
+	//		s.config.BindIP = net.ParseIP("127.0.0.1")
+	//	}
+	//
+	//	bindAddr := AddrSpec{IP: s.config.BindIP, Port: s.config.BindPort}
+	//
+	//	if err := sendReply(conn, ReplySucceeded, &bindAddr); err != nil {
+	//		return fmt.Errorf("failed to send reply: %v", err)
+	//	}
+	//
+	//	// wait here till the client close the connection
+	//	// check every 10 secs
+	//	tmp := []byte{}
+	//	var neverTimeout time.Time
+	//	for {
+	//		conn.SetReadDeadline(time.Now())
+	//		if _, err := conn.Read(tmp); err == io.EOF {
+	//			break
+	//		} else {
+	//			conn.SetReadDeadline(neverTimeout)
+	//		}
+	//		time.Sleep(10 * time.Second)
+	//	}
+	//
+	//	return nil
 	if err := sendResponse(conn, commandNotSupported, nil); err != nil {
 		server.Config.Logger.Errorf("Failed to send response: %v ", err)
 		return err
@@ -240,6 +291,18 @@ func sendResponse(writer io.Writer, resp uint8, addr *AddrSpec) error {
 
 type closeWriter interface {
 	CloseWrite() error
+}
+
+// checkRules is used to check request command is allowed
+func (server *Server) checkRules(req* Request, conn net.Conn) error {
+	if ok := server.Config.Rules.Allow(req); !ok {
+		if err := sendResponse(conn, ruleNotAllowed, nil); err != nil {
+			server.Config.Logger.Errorf("Failed to send response: %v ", err)
+			return err
+		}
+		return fmt.Errorf("command %d to %v blocked by rules ", req.Command, req.DestAddr)
+	}
+	return nil
 }
 
 func copyData(dst io.Writer, src io.Reader, errCh chan error) {

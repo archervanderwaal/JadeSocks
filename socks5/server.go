@@ -12,6 +12,7 @@ import (
 type ServerConfig struct {
 	AuthMethods []Authenticator
 	Resolver    NameResolver
+	Rules 		RuleSet
 	Network 	string
 	ListenAddr  string
 	Logger      *go_logger.Logger
@@ -29,6 +30,9 @@ func New(conf *ServerConfig) (*Server, error) {
 	if conf.Resolver == nil {
 		conf.Resolver = DNSResolver{}
 	}
+	if conf.Rules == nil {
+		conf.Rules = PermitAll()
+	}
 	server := &Server{
 		Config: conf,
 	}
@@ -45,17 +49,17 @@ func (server *Server) ListenAndServe() error {
 	return server.serve(listener)
 }
 
-func (s *Server) serve(listener net.Listener) error {
+func (server *Server) serve(listener net.Listener) error {
 	for {
 		conn, err := listener.Accept()
-		s.Config.Logger.Infof("TCP connection established successfully, %s -> %s", conn.RemoteAddr(), conn.LocalAddr())
+		server.Config.Logger.Infof("TCP connection established successfully, %s -> %s", conn.RemoteAddr(), conn.LocalAddr())
 		if err != nil {
-			s.Config.Logger.Errorf("TCP connection established failed, %s -> %s", conn.RemoteAddr(), conn.LocalAddr())
+			server.Config.Logger.Errorf("TCP connection established failed, %s -> %s", conn.RemoteAddr(), conn.LocalAddr())
 			return err
 		}
 		go func() {
 			// 2. 处理连接
-			_ = s.handleConn(conn)
+			_ = server.handleConn(conn)
 		}()
 	}
 }
@@ -105,15 +109,15 @@ func (server *Server) handleConn(conn net.Conn) error {
 	return nil
 }
 
-func (s *Server) authenticate(conn io.Writer, reader io.Reader, request *NegotiationRequest) error {
+func (server *Server) authenticate(conn io.Writer, reader io.Reader, request *NegotiationRequest) error {
 	for _, method := range request.Methods {
-		for _, authenticator := range s.Config.AuthMethods {
+		for _, authenticator := range server.Config.AuthMethods {
 			if authenticator.GetCode() == method {
 				if err := authenticator.Authenticate(reader, conn); err != nil {
-					s.Config.Logger.Errorf("Use the %d method of authentication failed", authenticator.GetCode())
+					server.Config.Logger.Errorf("Use the %d method of authentication failed", authenticator.GetCode())
 					return err
 				}
-				s.Config.Logger.Infof("Use the %d method of authentication success", authenticator.GetCode())
+				server.Config.Logger.Infof("Use the %d method of authentication success", authenticator.GetCode())
 				return nil
 			}
 		}

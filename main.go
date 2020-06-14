@@ -3,18 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/archervanderwaal/JadeSocks/config"
 	"github.com/archervanderwaal/JadeSocks/logger"
 	"github.com/archervanderwaal/JadeSocks/socks5"
 	"github.com/archervanderwaal/JadeSocks/utils"
 	"github.com/aybabtme/rgbterm"
-	"os"
 )
 
 const (
-	Version = "1.0"
-	Usage   = "Usage of JadeSocks: JadeSocks <options>"
-	Logo    = `
+	Version        = "1.0"
+	Usage          = "Usage of JadeSocks: JadeSocks <options>"
+	configFilePath = "~/.JadeSocks/JadeSocks.toml"
+	Logo           = `
       _           _       _____            _        
      | |         | |     / ____|          | |       
      | | __ _  __| | ___| (___   ___   ___| | _____ 
@@ -28,15 +30,13 @@ const (
 var (
 	v bool
 	h bool
-	s bool
-	c bool
+	f string
 )
 
 func init() {
 	flag.BoolVar(&h, "h", false, "Show usage of JadeSocks and exit")
 	flag.BoolVar(&v, "v", false, "Show version of JadeSocks and exit")
-	flag.BoolVar(&s, "s", false, "Use the server mode")
-	flag.BoolVar(&c, "c", false, "Use the client mode")
+	flag.StringVar(&f, "f", configFilePath, "Specify the configuration file path and start the SOCKs5 server")
 	flag.Usage = usage
 	flag.Parse()
 }
@@ -51,23 +51,16 @@ func main() {
 		flag.Usage()
 		return
 	}
-	if s && c {
-		_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf(rgbterm.FgString("The s and client cannot be started "+
-			"at the same time", 255, 0, 0)))
+	conf := &config.Config{}
+	err := conf.LoadConfig(f)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, rgbterm.FgString("Error reading configuration file"+err.Error(), 255, 0, 0))
 		return
 	}
-	conf := config.LoadConfig(s)
-	if s {
-		startServerMode(conf)
-		return
-	}
-	if c {
-		//startClientMode(conf)
-		return
-	}
+	startServer(conf)
 }
 
-func startServerMode(config *config.Config) {
+func startServer(config *config.Config) {
 	accounts := socks5.Accounts{MemoryUser: config.Users}
 	serverConf := &socks5.ServerConfig{
 		AuthMethods: []socks5.Authenticator{socks5.UserPassAuthenticator{Accounts: accounts}},
@@ -86,22 +79,6 @@ func startServerMode(config *config.Config) {
 		return
 	}
 }
-
-//func startClientMode(config *config.ServerConfig) {
-//	cli, err := client.NewClient(config)
-//	logger.Logger.Infof("Create client success %s\n", cli)
-//	if err != nil {
-//		_, _ = fmt.Fprintf(os.Stderr, rgbterm.FgString("Internal error: "+err.Error(), 255, 0, 0))
-//		return
-//	}
-//	err = cli.Listen(func(listenerAddr *net.TCPAddr) {
-//		log.Println(rgbterm.FgString("Start client success", 0, 255, 0))
-//	})
-//	if err != nil {
-//		_, _ = fmt.Fprintf(os.Stderr, rgbterm.FgString("Internal error: "+err.Error(), 255, 0, 0))
-//		return
-//	}
-//}
 
 func usage() {
 	// #00FF00
