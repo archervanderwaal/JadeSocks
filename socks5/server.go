@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/archervanderwaal/JadeSocks/logger"
 	go_logger "github.com/phachon/go-logger"
 	"io"
 	"net"
@@ -32,6 +33,12 @@ func New(conf *ServerConfig) (*Server, error) {
 	}
 	if conf.Rules == nil {
 		conf.Rules = PermitAll()
+	}
+	if conf.Logger == nil {
+		conf.Logger = logger.Logger
+	}
+	if conf.Network == "" {
+		conf.Network = "tcp"
 	}
 	server := &Server{
 		Config: conf,

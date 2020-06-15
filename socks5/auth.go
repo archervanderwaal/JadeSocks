@@ -18,8 +18,6 @@ const (
 	authFailure     = uint8(1)
 )
 
-type BytesGenerator func() []byte
-
 type Authenticator interface {
 	Authenticate(reader io.Reader, writer io.Writer) error
 	GetCode() uint8
