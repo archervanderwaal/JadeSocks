@@ -61,9 +61,15 @@ func main() {
 }
 
 func startServer(config *config.Config) {
-	accounts := socks5.Accounts{MemoryUser: config.Users}
+	var authMethods []socks5.Authenticator
+	if config.Users == nil {
+		authMethods = []socks5.Authenticator{socks5.NoAuthAuthenticator{}}
+	} else {
+		accounts := socks5.Accounts{MemoryUser: config.Users}
+		authMethods = []socks5.Authenticator{socks5.UserPassAuthenticator{Accounts: accounts}}
+	}
 	serverConf := &socks5.ServerConfig{
-		AuthMethods: []socks5.Authenticator{socks5.UserPassAuthenticator{Accounts: accounts}},
+		AuthMethods: authMethods,
 		Resolver:    socks5.DNSResolver{},
 		ListenAddr:  config.ListenAddr,
 		Network:     "tcp",
