@@ -25,9 +25,6 @@ github.com/op/go-logging
 ## explicit
 github.com/phachon/go-logger
 github.com/phachon/go-logger/utils
-# golang.org/x/net v0.0.0-20200501053045-e0ff5e5a1de5
-## explicit
 # golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
-golang.org/x/sys/unix
-# gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
 ## explicit
+golang.org/x/sys/unix
