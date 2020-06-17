@@ -24,7 +24,7 @@ func TestServer_WithUserPassAuthenticator(t *testing.T) {
 func TestServer_WithNoAuthAuthenticator(t *testing.T) {
 	serverConf := &ServerConfig{
 		AuthMethods: []Authenticator{NoAuthAuthenticator{}},
-		ListenAddr:  ":7890",
+		ListenAddr:  ":1080",
 	}
 	socks5Server, err := New(serverConf)
 	if err != nil {

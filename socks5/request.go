@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -47,6 +48,13 @@ type AddrSpec struct {
 	AddrType byte
 	IP       net.IP
 	Port     uint16
+}
+
+func (addr *AddrSpec) String() string {
+	if len(addr.Domain) != 0 {
+		return strings.Join([]string{addr.Domain, strconv.Itoa(int(addr.Port))}, ":")
+	}
+	return strings.Join([]string{addr.IP.String(), strconv.Itoa(int(addr.Port))}, ":")
 }
 
 func NewRequest(reader io.Reader) (*Request, error) {
@@ -126,8 +134,8 @@ func (server *Server) handleConnect(req *Request, conn net.Conn) error {
 		server.Config.Logger.Errorf("Connect to %v failed: %s", req.DestAddr, msg)
 		return err
 	}
+	server.Config.Logger.Infof("Connect remote %s success", req.DestAddr.String())
 	defer target.Close()
-
 	local := target.LocalAddr().(*net.TCPAddr)
 	bind := AddrSpec{
 		IP:       local.IP,
