@@ -176,42 +176,6 @@ func (server *Server) handleAssociate(req *Request, conn net.Conn) error {
 	if err := server.checkRules(req, conn); err != nil {
 		return err
 	}
-	//// Check if this is allowed
-	//	_ctx, ok := s.config.Rules.Allow(ctx, req)
-	//	if !ok {
-	//		if err := sendReply(conn, ReplyRuleFailure, nil); err != nil {
-	//			return fmt.Errorf("failed to send reply: %v", err)
-	//		}
-	//		return fmt.Errorf("associate to %v blocked by rules", req.DestAddr)
-	//	}
-	//	ctx = _ctx
-	//
-	//	// check bindIP 1st
-	//	if len(s.config.BindIP) == 0 || s.config.BindIP.IsUnspecified() {
-	//		s.config.BindIP = net.ParseIP("127.0.0.1")
-	//	}
-	//
-	//	bindAddr := AddrSpec{IP: s.config.BindIP, Port: s.config.BindPort}
-	//
-	//	if err := sendReply(conn, ReplySucceeded, &bindAddr); err != nil {
-	//		return fmt.Errorf("failed to send reply: %v", err)
-	//	}
-	//
-	//	// wait here till the client close the connection
-	//	// check every 10 secs
-	//	tmp := []byte{}
-	//	var neverTimeout time.Time
-	//	for {
-	//		conn.SetReadDeadline(time.Now())
-	//		if _, err := conn.Read(tmp); err == io.EOF {
-	//			break
-	//		} else {
-	//			conn.SetReadDeadline(neverTimeout)
-	//		}
-	//		time.Sleep(10 * time.Second)
-	//	}
-	//
-	//	return nil
 	if err := sendResponse(conn, commandNotSupported, nil); err != nil {
 		server.Config.Logger.Errorf("Failed to send response: %v ", err)
 		return err
